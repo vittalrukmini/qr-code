@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Architecture — SVRS QR Gallery System</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --cream:   #F5EDE0;
+      --navy:    #1A1A4E;
+      --maroon:  #7B1B2E;
+      --saffron: #E8832A;
+      --gold:    #F4B04A;
+      --green:   #2E6B3E;
+      --white:   #FFFFFF;
+      --muted:   #6B5744;
+      --border:  rgba(92,58,30,0.18);
+    }
+
+    body {
+      background: var(--cream);
+      font-family: 'Inter', sans-serif;
+      color: var(--navy);
+      min-height: 100vh;
+      padding: 40px 24px 60px;
+    }
+
+    h1 {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 28px; font-weight: 600;
+      text-align: center; margin-bottom: 4px;
+      color: var(--navy);
+    }
+    .sub {
+      text-align: center; font-size: 12px;
+      letter-spacing: 2px; text-transform: uppercase;
+      color: var(--maroon); margin-bottom: 48px;
+    }
+
+    /* ── Section titles ── */
+    .section-title {
+      font-size: 11px; font-weight: 600;
+      letter-spacing: 2px; text-transform: uppercase;
+      color: var(--muted); margin-bottom: 16px;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .section-title::after {
+      content: ''; flex: 1; height: 1px;
+      background: var(--border);
+    }
+
+    /* ── Main flow diagram ── */
+    .flow {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0;
+      flex-wrap: wrap;
+      margin-bottom: 56px;
+    }
+
+    .flow-node {
+      display: flex; flex-direction: column;
+      align-items: center; text-align: center;
+      width: 130px;
+    }
+    .flow-icon {
+      width: 64px; height: 64px; border-radius: 16px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 28px; margin-bottom: 10px;
+      box-shadow: 0 2px 12px rgba(0,0,0,.1);
+    }
+    .flow-label {
+      font-size: 12px; font-weight: 600; color: var(--navy);
+      line-height: 1.3; margin-bottom: 4px;
+    }
+    .flow-desc {
+      font-size: 10px; color: var(--muted);
+      line-height: 1.4;
+    }
+
+    .flow-arrow {
+      display: flex; flex-direction: column;
+      align-items: center; padding: 0 4px;
+      margin-bottom: 28px;
+    }
+    .flow-arrow .line {
+      width: 40px; height: 2px;
+      background: linear-gradient(90deg, var(--saffron), var(--gold));
+      position: relative;
+    }
+    .flow-arrow .line::after {
+      content: '▶';
+      position: absolute; right: -8px; top: -7px;
+      font-size: 10px; color: var(--gold);
+    }
+    .flow-arrow .arrow-label {
+      font-size: 9px; color: var(--muted);
+      margin-top: 4px; white-space: nowrap;
+    }
+
+    /* icon bg colors */
+    .bg-maroon  { background: var(--maroon); }
+    .bg-navy    { background: var(--navy); }
+    .bg-saffron { background: var(--saffron); }
+    .bg-green   { background: var(--green); }
+    .bg-gold    { background: #C87A10; }
+
+    /* ── Drive content table ── */
+    .drive-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 16px;
+      margin-bottom: 56px;
+    }
+    .drive-card {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 18px 20px;
+      box-shadow: 0 1px 6px rgba(92,58,30,.06);
+    }
+    .drive-card-header {
+      display: flex; align-items: center; gap: 10px;
+      margin-bottom: 12px;
+    }
+    .drive-card-icon {
+      width: 36px; height: 36px; border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px; flex-shrink: 0;
+    }
+    .drive-card-title {
+      font-size: 13px; font-weight: 600; color: var(--navy);
+    }
+    .drive-card-sub {
+      font-size: 10px; color: var(--muted);
+    }
+    .drive-card-body {
+      font-size: 11px; color: var(--muted);
+      line-height: 1.7;
+    }
+    .drive-card-body code {
+      background: rgba(92,58,30,.08);
+      padding: 1px 5px; border-radius: 4px;
+      font-family: monospace; font-size: 10px;
+      color: var(--maroon);
+    }
+
+    /* ── Security table ── */
+    .security-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 16px;
+      margin-bottom: 56px;
+    }
+    .security-card {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-left: 4px solid var(--green);
+      border-radius: 0 12px 12px 0;
+      padding: 18px 20px;
+      box-shadow: 0 1px 6px rgba(92,58,30,.06);
+    }
+    .security-card.warn {
+      border-left-color: var(--saffron);
+    }
+    .security-badge {
+      display: inline-flex; align-items: center; gap: 5px;
+      font-size: 10px; font-weight: 600;
+      letter-spacing: 1px; text-transform: uppercase;
+      padding: 3px 8px; border-radius: 20px;
+      margin-bottom: 8px;
+    }
+    .badge-secure {
+      background: rgba(46,107,62,.12); color: var(--green);
+    }
+    .badge-note {
+      background: rgba(232,131,42,.12); color: #9B5500;
+    }
+    .security-title {
+      font-size: 13px; font-weight: 600;
+      color: var(--navy); margin-bottom: 6px;
+    }
+    .security-body {
+      font-size: 11px; color: var(--muted); line-height: 1.7;
+    }
+    .security-body code {
+      background: rgba(92,58,30,.08);
+      padding: 1px 5px; border-radius: 4px;
+      font-family: monospace; font-size: 10px;
+      color: var(--maroon);
+    }
+
+    /* ── Gallery list ── */
+    .gallery-table {
+      width: 100%;
+      border-collapse: collapse;
+      background: var(--white);
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 1px 6px rgba(92,58,30,.06);
+      border: 1px solid var(--border);
+      margin-bottom: 56px;
+      font-size: 12px;
+    }
+    .gallery-table th {
+      background: var(--navy);
+      color: var(--white);
+      padding: 10px 16px;
+      text-align: left;
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+    }
+    .gallery-table td {
+      padding: 10px 16px;
+      border-bottom: 1px solid var(--border);
+      color: var(--navy);
+      vertical-align: middle;
+    }
+    .gallery-table tr:last-child td { border-bottom: none; }
+    .gallery-table tr:nth-child(even) td { background: rgba(245,237,224,.5); }
+    .gallery-table td a {
+      color: var(--maroon); text-decoration: none;
+      font-size: 11px;
+    }
+    .gallery-table td a:hover { text-decoration: underline; }
+    .dot-green {
+      display: inline-block; width: 8px; height: 8px;
+      border-radius: 50%; background: var(--green);
+      margin-right: 6px;
+    }
+
+    /* ── Build flow ── */
+    .build-steps {
+      display: flex; gap: 0; align-items: stretch;
+      margin-bottom: 56px; flex-wrap: wrap;
+    }
+    .build-step {
+      flex: 1; min-width: 160px;
+      background: var(--white);
+      border: 1px solid var(--border);
+      padding: 20px 16px;
+      position: relative;
+    }
+    .build-step:first-child { border-radius: 12px 0 0 12px; }
+    .build-step:last-child  { border-radius: 0 12px 12px 0; }
+    .build-step::after {
+      content: '▶';
+      position: absolute; right: -10px; top: 50%;
+      transform: translateY(-50%);
+      font-size: 12px; color: var(--gold);
+      z-index: 1;
+    }
+    .build-step:last-child::after { display: none; }
+    .step-num {
+      width: 24px; height: 24px; border-radius: 50%;
+      background: var(--maroon); color: var(--white);
+      font-size: 11px; font-weight: 600;
+      display: flex; align-items: center; justify-content: center;
+      margin-bottom: 10px;
+    }
+    .step-title {
+      font-size: 12px; font-weight: 600;
+      color: var(--navy); margin-bottom: 6px;
+    }
+    .step-body {
+      font-size: 10px; color: var(--muted); line-height: 1.6;
+    }
+    .step-body code {
+      background: rgba(92,58,30,.08);
+      padding: 1px 4px; border-radius: 3px;
+      font-family: monospace; color: var(--maroon);
+    }
+
+    /* footer */
+    .footer {
+      text-align: center; font-size: 11px;
+      color: var(--muted); margin-top: 16px;
+    }
+  </style>
+</head>
+<body>
+
+<h1>QR Gallery System — Architecture</h1>
+<div class="sub">Sri Vittal Rukmini Samsthan · Govindapuram</div>
+
+<!-- ── Runtime flow ── -->
+<div class="section-title">Runtime flow — what happens when someone scans a QR code</div>
+<div class="flow">
+  <div class="flow-node">
+    <div class="flow-icon bg-maroon">📱</div>
+    <div class="flow-label">Visitor</div>
+    <div class="flow-desc">Scans printed QR code</div>
+  </div>
+  <div class="flow-arrow">
+    <div class="line"></div>
+    <div class="arrow-label">opens URL</div>
+  </div>
+  <div class="flow-node">
+    <div class="flow-icon bg-navy">🌐</div>
+    <div class="flow-label">GitHub Pages</div>
+    <div class="flow-desc">Serves static HTML (~0.25 MB)</div>
+  </div>
+  <div class="flow-arrow">
+    <div class="line"></div>
+    <div class="arrow-label">API call + key</div>
+  </div>
+  <div class="flow-node">
+    <div class="flow-icon bg-gold">🔑</div>
+    <div class="flow-label">Drive API</div>
+    <div class="flow-desc">Lists all files in the folder</div>
+  </div>
+  <div class="flow-arrow">
+    <div class="line"></div>
+    <div class="arrow-label">fetches content</div>
+  </div>
+  <div class="flow-node">
+    <div class="flow-icon bg-green">📁</div>
+    <div class="flow-label">Drive Folder</div>
+    <div class="flow-desc">Photos, captions, readmore, music</div>
+  </div>
+  <div class="flow-arrow">
+    <div class="line"></div>
+    <div class="arrow-label">renders</div>
+  </div>
+  <div class="flow-node">
+    <div class="flow-icon bg-saffron">🖼</div>
+    <div class="flow-label">Gallery</div>
+    <div class="flow-desc">Photo slideshow with captions &amp; music</div>
+  </div>
+</div>
+
+<!-- ── What's fetched from Drive ── -->
+<div class="section-title">What the HTML fetches from each Drive folder</div>
+<div class="drive-grid">
+  <div class="drive-card">
+    <div class="drive-card-header">
+      <div class="drive-card-icon bg-saffron">🖼</div>
+      <div>
+        <div class="drive-card-title">Photos</div>
+        <div class="drive-card-sub">mimeType starts with <code>image/</code></div>
+      </div>
+    </div>
+    <div class="drive-card-body">
+      Any image file in the folder is automatically included as a gallery slide.<br><br>
+      Name files <code>1.jpg</code>, <code>2.jpg</code>… to match caption numbers. Ordered by filename.
+    </div>
+  </div>
+  <div class="drive-card">
+    <div class="drive-card-header">
+      <div class="drive-card-icon bg-navy">📝</div>
+      <div>
+        <div class="drive-card-title">Captions</div>
+        <div class="drive-card-sub">filename = <code>captions.txt</code></div>
+      </div>
+    </div>
+    <div class="drive-card-body">
+      One caption per line in format <code>1|Caption text here</code>.<br><br>
+      The number matches the photo filename. Missing captions are silently skipped.
+    </div>
+  </div>
+  <div class="drive-card">
+    <div class="drive-card-header">
+      <div class="drive-card-icon bg-maroon">📖</div>
+      <div>
+        <div class="drive-card-title">Read More Panel</div>
+        <div class="drive-card-sub">filename = <code>readmore.txt</code></div>
+      </div>
+    </div>
+    <div class="drive-card-body">
+      First line = panel title. Remaining lines = body paragraphs (blank line = new paragraph).<br><br>
+      Shown in a slide-up panel when visitor taps "Read More".
+    </div>
+  </div>
+  <div class="drive-card">
+    <div class="drive-card-header">
+      <div class="drive-card-icon bg-green">🎵</div>
+      <div>
+        <div class="drive-card-title">Background Music</div>
+        <div class="drive-card-sub">mimeType starts with <code>audio/</code></div>
+      </div>
+    </div>
+    <div class="drive-card-body">
+      Any <code>.mp3</code> or <code>.m4a</code> file in the folder is streamed as background music.<br><br>
+      Music button is hidden automatically if no audio file is present.
+    </div>
+  </div>
+</div>
+
+<!-- ── Build flow ── -->
+<div class="section-title">Build flow — how HTML files are produced</div>
+<div class="build-steps">
+  <div class="build-step">
+    <div class="step-num">1</div>
+    <div class="step-title">Edit build.js</div>
+    <div class="step-body">Add a gallery entry with <code>title</code>, <code>folderId</code>, <code>outputFile</code>. Logo is shared across all galleries.</div>
+  </div>
+  <div class="build-step">
+    <div class="step-num">2</div>
+    <div class="step-title">Run build</div>
+    <div class="step-body"><code>node build.js</code> — produces one self-contained HTML per gallery. Logo baked as base64.</div>
+  </div>
+  <div class="build-step">
+    <div class="step-num">3</div>
+    <div class="step-title">Push to GitHub</div>
+    <div class="step-body"><code>git push</code> — all HTMLs live in the <code>qr-code</code> repo, served by GitHub Pages.</div>
+  </div>
+  <div class="build-step">
+    <div class="step-num">4</div>
+    <div class="step-title">Generate QR</div>
+    <div class="step-body">Paste the GitHub Pages URL into qr.io or qrcode-monkey.com. Download and print.</div>
+  </div>
+  <div class="build-step">
+    <div class="step-num">5</div>
+    <div class="step-title">Update content</div>
+    <div class="step-body">Upload/edit files in Drive anytime. Gallery updates instantly — no rebuild, no new QR code.</div>
+  </div>
+</div>
+
+<!-- ── Security ── -->
+<div class="section-title">Security measures</div>
+<div class="security-grid">
+  <div class="security-card">
+    <div class="security-badge badge-secure">✓ Secured</div>
+    <div class="security-title">API Key — HTTP Referrer Restriction</div>
+    <div class="security-body">
+      Key only works when called from <code>https://vittalrukmini.github.io/*</code>.<br>
+      Anyone who copies the key cannot use it from their own site or app.
+    </div>
+  </div>
+  <div class="security-card">
+    <div class="security-badge badge-secure">✓ Secured</div>
+    <div class="security-title">API Key — API Restriction</div>
+    <div class="security-body">
+      Key is restricted to <strong>Google Drive API only</strong>.<br>
+      Cannot be used to access Maps, YouTube, Gmail, or any other Google service.
+    </div>
+  </div>
+  <div class="security-card">
+    <div class="security-badge badge-secure">✓ Secured</div>
+    <div class="security-title">Read-Only Access</div>
+    <div class="security-body">
+      The API key has no write scope. It can only list and read files.<br>
+      No one can upload, delete, or modify Drive content via this key.
+    </div>
+  </div>
+  <div class="security-card">
+    <div class="security-badge badge-secure">✓ By Design</div>
+    <div class="security-title">Public Folders Only</div>
+    <div class="security-body">
+      Only Drive folders shared as <em>"Anyone with the link can view"</em> are used.<br>
+      Private files in other folders remain completely inaccessible.
+    </div>
+  </div>
+  <div class="security-card">
+    <div class="security-badge badge-note">ℹ Note</div>
+    <div class="security-title">Key Visible in HTML Source</div>
+    <div class="security-body">
+      Because this is a static site with no backend, the API key is visible in page source.<br>
+      The referrer + API restrictions above make this safe — the key is worthless without the approved domain.
+    </div>
+  </div>
+  <div class="security-card">
+    <div class="security-badge badge-secure">✓ No Backend</div>
+    <div class="security-title">Zero Infrastructure</div>
+    <div class="security-body">
+      No server, no database, no credentials stored anywhere.<br>
+      GitHub Pages is static hosting — nothing to compromise or maintain.
+    </div>
+  </div>
+</div>
+
+<!-- ── File naming rules ── -->
+<div class="section-title">File naming rules — what to upload to each Drive folder</div>
+<div class="drive-grid" style="margin-bottom:56px">
+  <div class="drive-card">
+    <div class="drive-card-header">
+      <div class="drive-card-icon bg-saffron">🖼</div>
+      <div>
+        <div class="drive-card-title">Photo files</div>
+        <div class="drive-card-sub">Rule: name as <code>1.jpg</code>, <code>2.jpg</code>, <code>3.jpg</code>…</div>
+      </div>
+    </div>
+    <div class="drive-card-body">
+      Files are sorted by name — numeric naming ensures correct order.<br><br>
+      The number becomes the caption lookup key. A photo named <code>3.jpg</code> shows the caption from line <code>3|…</code> in captions.txt.<br><br>
+      Any image format works (<code>.jpg</code>, <code>.jpeg</code>, <code>.png</code>, <code>.webp</code>).
+    </div>
+  </div>
+  <div class="drive-card">
+    <div class="drive-card-header">
+      <div class="drive-card-icon bg-navy">📝</div>
+      <div>
+        <div class="drive-card-title">captions.txt</div>
+        <div class="drive-card-sub">Rule: exact filename <code>captions.txt</code></div>
+      </div>
+    </div>
+    <div class="drive-card-body">
+      One line per photo. Format: <code>number|caption text</code><br><br>
+      <code>1|First performance in 1993</code><br>
+      <code>2|Performing Aradhanai every year</code><br>
+      <code>3|Unforgettable moments with Guruji</code><br><br>
+      Lines without a matching photo are ignored. Photos without a matching line show no caption.
+    </div>
+  </div>
+  <div class="drive-card">
+    <div class="drive-card-header">
+      <div class="drive-card-icon bg-maroon">📖</div>
+      <div>
+        <div class="drive-card-title">readmore.txt</div>
+        <div class="drive-card-sub">Rule: exact filename <code>readmore.txt</code></div>
+      </div>
+    </div>
+    <div class="drive-card-body">
+      <strong>Line 1</strong> = Panel title (e.g. <code>Guru Parambara — The Sacred Lineage</code>)<br><br>
+      <strong>Remaining lines</strong> = Body text. A blank line starts a new paragraph.<br><br>
+      No special formatting needed — plain text only.
+    </div>
+  </div>
+  <div class="drive-card">
+    <div class="drive-card-header">
+      <div class="drive-card-icon bg-green">🎵</div>
+      <div>
+        <div class="drive-card-title">Music file</div>
+        <div class="drive-card-sub">Rule: any filename, must be <code>.mp3</code> or <code>.m4a</code></div>
+      </div>
+    </div>
+    <div class="drive-card-body">
+      Filename doesn't matter — detected automatically by MIME type (<code>audio/mpeg</code>, <code>audio/mp4</code>).<br><br>
+      Only one audio file per folder. Music button is hidden if no audio file is present — no configuration needed.
+    </div>
+  </div>
+</div>
+
+<!-- ── How captions & music render ── -->
+<div class="section-title">How captions and music are rendered</div>
+<div class="security-grid" style="margin-bottom:56px">
+  <div class="security-card" style="border-left-color:var(--saffron)">
+    <div class="security-badge badge-note">Captions</div>
+    <div class="security-title">Step 1 — Fetch &amp; parse</div>
+    <div class="security-body">
+      On page load the Drive API lists all files. <code>captions.txt</code> is fetched via <code>?alt=media&amp;key=…</code> and parsed into a JS object: <code>{"1": "caption…", "2": "caption…"}</code>
+    </div>
+  </div>
+  <div class="security-card" style="border-left-color:var(--saffron)">
+    <div class="security-badge badge-note">Captions</div>
+    <div class="security-title">Step 2 — Display on slide change</div>
+    <div class="security-body">
+      Each time a slide becomes active, the image filename (e.g. <code>3.jpg</code>) is stripped of its extension → key <code>3</code> → looked up in the captions object → shown in the subtitle bar below the photo. Fades out if no caption found.
+    </div>
+  </div>
+  <div class="security-card" style="border-left-color:var(--green)">
+    <div class="security-badge badge-secure">Music</div>
+    <div class="security-title">Step 1 — Detect &amp; load</div>
+    <div class="security-body">
+      The Drive file listing is scanned for any file with <code>mimeType</code> starting with <code>audio/</code>. Its Drive file ID is used to construct a streaming URL: <code>drive/v3/files/FILE_ID?alt=media&amp;key=…</code> — set directly as <code>&lt;audio src&gt;</code>. Music button appears.
+    </div>
+  </div>
+  <div class="security-card" style="border-left-color:var(--green)">
+    <div class="security-badge badge-secure">Music</div>
+    <div class="security-title">Step 2 — Play on tap</div>
+    <div class="security-body">
+      Browser autoplay policy blocks audio until user interaction. The tap-to-begin overlay captures the first tap → dismisses overlay → starts music at 50% volume, looping. The ♪ button in the corner toggles play/pause at any time.
+    </div>
+  </div>
+</div>
+
+<!-- ── Gallery URLs ── -->
+<div class="section-title">All 9 galleries — QR code URLs</div>
+<table class="gallery-table">
+  <thead>
+    <tr>
+      <th>Gallery</th>
+      <th>Drive Folder ID</th>
+      <th>GitHub Pages URL</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><span class="dot-green"></span>Guru Parambara</td>
+      <td><code style="font-size:10px;font-family:monospace;color:var(--muted)">16uTUjIQkf0C1cm3mJlvQcd_J97gLklaH</code></td>
+      <td><a href="https://vittalrukmini.github.io/qr-code/guru-parambara.html" target="_blank">…/guru-parambara.html</a></td>
+    </tr>
+    <tr>
+      <td><span class="dot-green"></span>Family Legacy Met Divine Destiny</td>
+      <td><code style="font-size:10px;font-family:monospace;color:var(--muted)">1eyECHbSQg-VLPnOlz_653gR79ivfAIP_</code></td>
+      <td><a href="https://vittalrukmini.github.io/qr-code/family-legacy-met-divine-destiny.html" target="_blank">…/family-legacy-met-divine-destiny.html</a></td>
+    </tr>
+    <tr>
+      <td><span class="dot-green"></span>Gokulum Goshala</td>
+      <td><code style="font-size:10px;font-family:monospace;color:var(--muted)">1oemXNUhqbH8bxC7PhHGYtRsf0CP4s1ug</code></td>
+      <td><a href="https://vittalrukmini.github.io/qr-code/gokulum-goshala.html" target="_blank">…/gokulum-goshala.html</a></td>
+    </tr>
+    <tr>
+      <td><span class="dot-green"></span>Grand Events</td>
+      <td><code style="font-size:10px;font-family:monospace;color:var(--muted)">1Vi_wwmZC8nSUkxubVLImCqZnDsPwWxic</code></td>
+      <td><a href="https://vittalrukmini.github.io/qr-code/grand-events.html" target="_blank">…/grand-events.html</a></td>
+    </tr>
+    <tr>
+      <td><span class="dot-green"></span>Kumbhabhishegam</td>
+      <td><code style="font-size:10px;font-family:monospace;color:var(--muted)">12pfSfWTXcuLGSZc8ujmazvw2xQ7Zw82s</code></td>
+      <td><a href="https://vittalrukmini.github.io/qr-code/kumbhabhishegam.html" target="_blank">…/kumbhabhishegam.html</a></td>
+    </tr>
+    <tr>
+      <td><span class="dot-green"></span>Major Utsav</td>
+      <td><code style="font-size:10px;font-family:monospace;color:var(--muted)">1jBh_-hlZt9Z8yz_eo8HucdezD4LEkvOx</code></td>
+      <td><a href="https://vittalrukmini.github.io/qr-code/major-utsav.html" target="_blank">…/major-utsav.html</a></td>
+    </tr>
+    <tr>
+      <td><span class="dot-green"></span>Nama Prachaar</td>
+      <td><code style="font-size:10px;font-family:monospace;color:var(--muted)">1EksFTHMbu7-uyQpR-9mhfYTFNJBHqkE9</code></td>
+      <td><a href="https://vittalrukmini.github.io/qr-code/nama-prachaar.html" target="_blank">…/nama-prachaar.html</a></td>
+    </tr>
+    <tr>
+      <td><span class="dot-green"></span>Transformation Story</td>
+      <td><code style="font-size:10px;font-family:monospace;color:var(--muted)">11Zg0WLlJiMgjD-SUC0iAfzMETALqgGod</code></td>
+      <td><a href="https://vittalrukmini.github.io/qr-code/transformation-story.html" target="_blank">…/transformation-story.html</a></td>
+    </tr>
+    <tr>
+      <td><span class="dot-green"></span>With Mahaans</td>
+      <td><code style="font-size:10px;font-family:monospace;color:var(--muted)">1826TF9eNAD7Ns6ogJyl097rZcM2nyaai</code></td>
+      <td><a href="https://vittalrukmini.github.io/qr-code/with-mahaans.html" target="_blank">…/with-mahaans.html</a></td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="footer">Sri Vittal Rukmini Samsthan · Govindapuram, Thanjavur · vittalrukmini.org</div>
+
+</body>
+</html>
